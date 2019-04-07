@@ -1,0 +1,16 @@
+package com.stardai.manage.config;
+
+
+import java.lang.annotation.*;
+/**
+ * @program: ujiedan
+ * @Date: 2018/8/10 17:06
+ * @Author: Tina
+ * @Description:
+ */
+@Target({ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface Log {
+    String value() default "";
+}

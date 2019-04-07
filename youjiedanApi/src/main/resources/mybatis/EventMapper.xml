@@ -1,0 +1,597 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace:命名空间 -->
+<mapper namespace="com.stardai.manage.mapper.EventMapper">
+
+	<!-- 查询当前要弹窗的活动的id -->
+	<select id="queryEventsIndate" resultType="Integer">
+		select
+		event_id
+		from
+		yjd_event_switch
+		WHERE
+		event_switch = 1
+		AND
+		#{currentTime} BETWEEN begin_time AND end_time
+	</select>
+
+	<!-- 查要弹窗的活动的url等 -->
+	<select id="queryUrlAndPriority" resultType="java.util.HashMap">
+		select
+		url,pop_url as popUrl,priority
+		from
+		yjd_user_system_message
+		WHERE
+		id IN
+		<foreach collection="ids" item="id" separator="," open="("
+			close=")">
+			#{id}
+		</foreach>
+		ORDER BY priority
+	</select>
+
+	<!-- 查询当前要弹窗的活动的id（安卓端） -->
+	<select id="queryPopUpIndateForAndroid" resultType="com.stardai.manage.response.ResponsePopupInfo">
+		select
+		priority,event_id
+		from
+		yjd_popup_setting
+		WHERE
+		event_switch = 1
+		AND
+		#{currentTime} BETWEEN begin_time AND end_time
+		AND
+		version_code = #{versionCode}
+
+	</select>
+
+	<!-- 查询安卓版本的信息 -->
+	<select id="getAndroidVersionInfo" resultType="com.stardai.manage.response.ResponsePopupInfo">
+		select
+		uuid,
+		os_type,
+		id,
+		page,
+		rows,
+		is_force_update,
+		pre_baseline_code,
+		version_name,
+		version_code,
+		downurl,
+		update_log,
+		size,
+		has_affect_codes,
+		create_time,
+		is_deleted
+		from
+		yjd_sys_version_check_new
+		WHERE
+		is_deleted = 0
+		and
+		os_type = "android"
+
+	</select>
+
+	<!-- 查询当前要弹窗的活动的id（iOS） -->
+	<select id="queryPopUpIndateForiOS" resultType="com.stardai.manage.response.ResponsePopupInfo">
+		select
+		priority,event_id
+		from
+		yjd_popup_setting
+		WHERE
+		event_switch = 1
+		AND
+		#{currentTime} BETWEEN begin_time AND end_time
+		AND
+		version_id = #{versionId}
+
+	</select>
+
+	<!-- 查询iOS版本的信息 -->
+	<select id="getiOSVersionInfo" resultType="com.stardai.manage.response.ResponsePopupInfo">
+		select
+		ios_version,
+		verify_status,
+		update_log,
+		is_deleted
+		from
+		yjd_sys_version_check_new
+		WHERE
+		is_deleted = 0
+		and
+		os_type = "ios"
+		ORDER BY ios_version desc limit 1
+
+	</select>
+
+
+	<!-- 根据eventId查询活动的具体信息 -->
+	<select id="queryEventInfo" resultType="com.stardai.manage.response.ResponsePopupInfo">
+		select
+		url,pop_url
+		from
+		yjd_user_system_message
+		WHERE
+		id = #{eventId}
+
+	</select>
+
+	<!--当要弹屏的活动是邀请时，去系统公告里查priority=123的数据 -->
+	<select id="queryInventEventInfo" resultType="com.stardai.manage.response.ResponsePopupInfo">
+		select
+		url,pop_url
+		from
+		yjd_user_system_message
+		WHERE
+		priority = 123
+
+	</select>
+
+	<!-- 查询7天内此号码是否提交过企业合作 -->
+	<select id="queryIsCooperation" resultType="String">
+		select
+		mobile_number
+		from
+		yjd_company_cooperation
+		WHERE
+		mobile_number = #{mobileNumber}
+		and is_deleted = 0
+		and timestampadd(day, 7, create_time) > now()
+
+	</select>
+
+	<!-- 插入一条新的企业合作信息 -->
+	<insert id="addCompanyCooperation">
+		INSERT INTO yjd_company_cooperation (
+		name,
+		mobile_number,
+		company,
+		area,
+		require_num,
+		create_time
+		)
+		VALUES
+		(
+		#{name},
+		#{mobileNumber},
+		#{company},
+		#{area},
+		#{requireNum},
+		now()
+		);
+	</insert>
+
+	<!-- 根据版本code获取ios版本 -->
+		<select id="getIosVersionByVersionCode" resultType="String">
+		select
+		version_name
+		from
+		yjd_sys_version_check_new
+		WHERE
+		version_code =
+		#{versionCode}
+
+	</select>
+
+	<!-- 根据ios版本获取安卓对应的的版本号 -->
+	<select id="getVersionCodeByIosVersion" resultType="String">
+		select
+		version_code
+		from
+		yjd_sys_version_check_new
+		WHERE
+		version_name = #{iosVersion}
+
+	</select>
+
+	<!-- 查询发现页面的轮播图列表 -->
+	<select id="queryCarouselList" resultType="hashmap">
+		select
+		picture_url as pictureUrl,
+		click_url as clickUrl
+		from
+		yjd_discovery_carousel
+		WHERE
+		is_deleted = 0
+		order by sequence asc
+	</select>
+
+
+	<!-- 往奖励表插入一条用户获取奖励的记录 -->
+	<insert id="addLotteryForUser">
+		INSERT INTO `yjd_lottery_reward`
+		(user_id,coupon_amount,coupon_fullreduction,lottery_name,create_time)
+		VALUES
+		(#{userId},#{couponAmount},#{couponFullreduction},#{name},now());
+	</insert>
+
+	<!--用户抽奖获取的奖励列表 -->
+	<select id="queryLotteryReward" resultType="com.stardai.manage.response.ResponseLotteryList">
+		select
+		user_id as userId,
+		lottery_name as lotteryName,
+		create_time as createTime
+		from
+		yjd_lottery_reward
+		WHERE
+		user_id = #{userId}
+		order by create_time desc
+		limit #{page},#{pageSize}
+	</select>
+
+	<!--查询全部的中奖纪录用作轮播-->
+	<select id="queryAllLotteryReward" resultType="com.stardai.manage.response.ResponseLotteryList">
+		select
+		user_id as userId,
+		coupon_amount,
+		coupon_fullreduction,
+		lottery_name
+		from
+		yjd_lottery_reward
+		order by create_time desc
+		limit 0,30
+	</select>
+
+	<!--展业海报首页热门推荐列表-->
+	<select id="queryPosterHotList" resultType="com.stardai.manage.response.ResponsePosterHotList">
+		select
+		bg_code,
+		bg_group,
+		bg_name,
+		bg_thumb,
+		bg_origin,
+		bg_count
+		from
+		yjd_poster_bg
+		where
+		is_deleted = 0
+		<if test="sortCode!=1000">
+			AND bg_group = #{sortCode}
+		</if>
+		<if test="type == 1">
+			order by bg_count desc,bg_code
+		</if>
+		<if test="type == 2">
+			order by create_time desc,bg_code
+		</if>
+		limit #{page},#{pageSize}
+	</select>
+
+	<!--搜索页面的热门推荐-->
+	<select id="queryHotSearch" resultType="String">
+		select
+		bg_name
+		from
+		yjd_poster_bg
+		where
+		is_deleted = 0
+		order by create_time desc,bg_code
+		limit 0,12
+	</select>
+
+	<!--搜索页面的历史纪录-->
+	<select id="queryHistorySearch" resultType="String">
+		select
+		search_content
+		from
+		yjd_poster_search_record
+		where
+		is_deleted = 0
+		and user_id = #{userId}
+		order by create_time desc
+		limit 0,6
+	</select>
+
+
+
+
+	<!--根据海报名称搜索海报内容-->
+	<select id="queryPosterByKeyWord" resultType="com.stardai.manage.response.ResponsePosterHotList">
+		select
+		bg_code,
+		bg_group,
+		bg_name,
+		bg_thumb,
+		bg_origin,
+		bg_count
+		from
+		yjd_poster_bg
+		where
+		is_deleted = 0
+		and bg_name LIKE CONCAT(CONCAT('%', #{keyWords}),'%')
+	</select>
+
+	<!--查询用户之前是否搜索过这个关键词-->
+	<select id="queryIsSearchBefore" resultType="Integer">
+		select
+		count(*)
+		from
+		yjd_poster_search_record
+		where
+		is_deleted = 0
+		and user_id = #{userId}
+		and search_content = #{keyWords}
+	</select>
+
+	<!-- 记录该用户搜索的纪录 -->
+	<insert id="addSearchRecord">
+		INSERT INTO yjd_poster_search_record (
+		user_id,
+		search_content,
+		create_time
+		)
+		VALUES
+		(
+		#{userId},
+		#{keyWords},
+		now()
+		);
+	</insert>
+
+	<!--更新用户的搜索记录 -->
+	<update id="updateSearchRecord">
+		UPDATE yjd_poster_search_record
+		SET
+		create_time = now()
+		WHERE
+		user_id = #{userId}
+		and
+		is_deleted = 0
+		and search_content = #{keyWords}
+	</update>
+
+	<!-- 清空历史纪录 -->
+	<update id="setHistoryRecord">
+		UPDATE yjd_poster_search_record
+		SET
+		is_deleted = 1
+		WHERE
+		user_id = #{userId}
+		and
+		is_deleted = 0
+	</update>
+
+	<!-- 添加海报使用次数 -->
+	<update id="addUsingCount">
+		UPDATE yjd_poster_bg
+		SET
+		bg_count = bg_count + 1
+		WHERE
+		bg_code = #{bgCode}
+		and
+		is_deleted = 0
+	</update>
+
+	<!--查看某个分类下的海报图片-->
+	<select id="queryPosterForEachSort" resultType="com.stardai.manage.response.ResponsePosterHotList">
+		select
+		bg_code,
+		bg_group,
+		bg_name,
+		bg_thumb,
+		bg_origin,
+		bg_count
+		from
+		yjd_poster_bg
+		where
+		is_deleted = 0
+		<if test="sortCode!=1000">
+			AND bg_group = #{sortCode}
+		</if>
+		<if test="type == 1">
+			order by bg_count desc,bg_code
+		</if>
+		<if test="type == 2">
+			order by create_time desc,bg_code
+		</if>
+		limit #{page},#{pageSize}
+	</select>
+
+
+	<!-- 记录该用户信用查询的记录 -->
+	<insert id="addCreditRecord">
+		INSERT INTO yjd_user_credit_record (
+		user_id,
+		order_no,
+		name,
+		id_card,
+		mobile_number,
+		create_time
+		)
+		VALUES
+		(
+		#{userId},
+		#{orderNo},
+		#{name},
+		#{idCard},
+		#{mobileNumber},
+		now()
+		);
+	</insert>
+
+	<!--查询用户10月份活动抢的单子数量-->
+	<select id="queryCouponByGrabOrder" resultType="com.stardai.manage.response.ResponseCouponByGrabOrder">
+		select
+		order_amount,
+		coupon_nolimit,
+		coupon_limit
+		from
+		yjd_graborder_send_statistics
+		where
+		user_id = #{userId}
+	</select>
+
+	<!--查询用户10月份活动抢的单子数量-->
+	<select id="queryCreditSearchCost" resultType="integer">
+		select
+		cost_money
+		from
+		yjd_user_credit_cost
+		where
+		id = 1
+	</select>
+
+	<!--查看哪些城市正在打折-->
+	<select id="queryDiscountCity" resultType="String">
+		select
+		limit_city
+		from
+		yjd_neworder_discount
+		where
+		discount_type = 3
+	</select>
+
+	<select id="queryDayConsumption" resultType="int">
+		select
+		IFNULL(sum(amount-coupon_amount),0)
+		from
+		yjd_pay_outcome
+		where
+		create_time like '${day}%'
+		and
+		user_id =#{userId}
+	</select>
+
+	<select id="getActivityInfo" resultType="java.util.HashMap">
+      select
+      *
+      from
+      yjd_activity_info
+      where
+      type=#{type}
+      and
+      is_delete=0
+	  and
+	  start_time <![CDATA[ <= ]]> now()
+	  AND
+	  end_time <![CDATA[ >= ]]>now()
+	</select>
+	<select id="queryIsLimit" resultType="int">
+      select
+      count(1)
+      from
+      yjd_grab_disabled
+      where
+      user_id=#{userId}
+      and
+      is_deleted=0
+      and
+      (
+      (
+      begin_time <![CDATA[ <= ]]> #{start}
+      and
+      end_time <![CDATA[ >= ]]> #{start}
+      )
+      or
+      (
+      begin_time <![CDATA[ <= ]]>#{end}
+      and
+      end_time <![CDATA[ >= ]]> #{end}
+      )
+	  OR(
+		begin_time <![CDATA[ >= ]]> #{start}
+		and
+		end_time <![CDATA[ <= ]]> #{end}
+		)
+      )
+	</select>
+	<insert id="insertSnatchRecord">
+          insert into snatch_a_single_invoice_record
+          (user_id,create_date)
+          values
+          (
+          #{userId},DATE_FORMAT(now(),'%Y-%m-%d')
+          )
+	</insert>
+
+	<update id="updateSnatchRecord">
+      update snatch_a_single_invoice_record
+      set count=count+#{count},
+      available5=available5+#{available5},
+      available10=available10+#{available10},
+      available50=available50+#{available50}
+      where
+      user_id=#{userId}
+      and
+      create_date=#{date}
+	</update>
+
+	<select id="isRegistrationDuringTheEvent" resultType="int">
+		select count(1) from
+		yjd_user_info
+		where
+		user_id=#{userId}
+		and
+		is_deleted = 0
+		and
+		create_time <![CDATA[ >= ]]> #{startTime}
+		and
+		create_time <![CDATA[ <= ]]> #{endTime}
+	</select>
+
+	<select id="getActivityInfoById" resultType="java.util.HashMap">
+      select
+      *
+      from
+      yjd_activity_info
+      where
+      type=#{type}
+      and
+      is_delete=0
+	</select>
+	<insert id="addPvUv">
+		insert into recharge_feedback_button
+		(ip,button_type,create_date)
+		values
+		(
+		#{ip},#{buttonType},DATE_FORMAT(now(),'%Y-%m-%d')
+		)
+	</insert>
+	<select id="getScreenSettingsByVersionCode" resultType="com.stardai.manage.pojo.ScreenSetting">
+       select * from yjd_screen_settings
+       where
+       version_code=#{versionCode}
+       and
+       (os_type='all' or os_type=#{osType})
+       and
+       is_delete=0
+       limit 1;
+	</select>
+	<select id="getShellScreenMaterialById" resultType="com.stardai.manage.pojo.ShellScreenMaterial">
+       select * from yjd_shell_screen_material
+       where
+       id=#{id}
+       and
+       is_delete=0
+	</select>
+	<select id="getVersionInfoByOsType" resultType="com.stardai.manage.pojo.AppVersionInfo">
+       select * from yjd_app_version
+       where
+       os_type=#{osType}
+       and
+       is_delete=0
+       order by version_code desc limit 1
+	</select>
+	<select id="getPropertyMappingByProperty" resultType="com.stardai.manage.pojo.CrowdCategoryMapping">
+       select * from yjd_crowd_category_mapping where property=#{property}
+	</select>
+	<select id="isNewUser" resultType="int">
+		select count(1) from yjd_pay_income
+		where
+		(pay_pathway ='支付宝购买星币'
+		or
+		pay_pathway ='微信购买星币')
+		and
+		user_id=#{userId}
+	</select>
+	<insert id="addStatisticsPvUv">
+		insert into pvuv_statistics
+		(ip,type,create_date,eventId)
+		values
+		(
+		#{ip},#{type},DATE_FORMAT(now(),'%Y-%m-%d'),#{eventId}
+		)
+	</insert>
+</mapper>

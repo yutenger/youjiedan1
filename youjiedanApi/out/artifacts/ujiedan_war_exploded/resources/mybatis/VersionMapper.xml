@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace:命名空间 -->
+<mapper namespace="com.stardai.manage.mapper.VersionMapper">
+
+	<!-- 查询最新版本(安卓) -->
+	<select id="checkVersionAndroid" resultType="com.stardai.manage.pojo.SysVersionCheck">
+		select
+		uuid,
+		os_type,
+		id,
+		page,
+		rows,
+		is_force_update,
+		pre_baseline_code,
+		version_name,
+		version_code,
+		downurl,
+		update_log,
+		size,
+		has_affect_codes,
+		create_time,
+		ios_version,
+		verify_status,
+		is_deleted
+		from
+		yjd_sys_version_check_new
+		WHERE
+		is_deleted = 0
+		and
+		os_type = "android"
+	</select>
+
+	
+	<!-- 查询iOS不同版本的状态，即是否通过审核 -->
+	<select id="checkStatusForIOSVersion" resultType="com.stardai.manage.pojo.SysVersionCheckForIOS">
+		select
+		ios_version,
+		verify_status
+		from
+		yjd_sys_version_check_new
+		WHERE
+		is_deleted = 0
+		and
+		os_type = "ios"
+		and  ios_version = #{iosVersion}
+	</select>
+	
+</mapper>

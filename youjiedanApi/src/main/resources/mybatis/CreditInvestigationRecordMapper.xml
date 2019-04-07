@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace:命名空间 -->
+<mapper namespace="com.stardai.manage.mapper.CreditInvestigationRecordMapper">
+
+	<!-- 插入征信订单记录 -->
+	<insert id="saveCreditInvestigationRecord">
+		INSERT INTO yjd_user_credit_investigation_record(
+		order_no,
+		mobile_number,
+		name,
+	    open_id,
+	    id_card,
+	    pay_show,
+	    create_time
+		)
+		VALUES
+		(
+		#{orderNo},
+		#{mobileNumber},
+		#{name},
+		#{openId},
+		#{idCard},
+		#{payShow},
+		now()
+		 );
+	</insert>
+	<!-- 更改订单状态 -->
+	<update id="updateCreditInvestigationRecordByOrderNo">
+        UPDATE yjd_user_credit_investigation_record
+        SET
+        pay_status = #{payStatus},
+        transaction_no=#{transactionNo},
+        charge_id=#{chargeId},
+        modify_time=now()
+        WHERE
+        order_no =
+        #{orderNo}
+    </update>
+	<!-- 查询征信订单信息-->
+	<select id="queryCreditInvestigationRecordByOrderNo" resultType="com.stardai.manage.pojo.CreditInvestigationRecord">
+		SELECT
+		order_no,
+		open_id,
+		name,
+		id_card,
+		mobile_number,
+		pay_status,
+		pay_show,
+		transaction_no,
+		charge_id,
+		create_time,
+		modify_time
+		FROM
+		yjd_user_credit_investigation_record
+		where
+		  order_no =
+        #{orderNo}
+	</select>
+	<select id="queryPayAmount" resultType="java.util.Map">
+		SELECT
+		pay_amount,
+		pay_show
+		FROM
+		yjd_user_credit_pay_price
+		where
+		  id ='1'
+	</select>
+</mapper>

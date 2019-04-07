@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace:命名空间 -->
+<mapper namespace="com.stardai.manage.mapper.FunctionCountMapper">
+
+	<!-- 添加功能模块统计 -->
+	<insert id="addFunctionCount">
+		INSERT INTO yjd_function_count (
+		function_name,
+		create_datetime,
+		create_date
+		)
+		VALUES
+		(
+		
+		#{functionName},
+		now(),
+		now()
+		);
+	</insert>
+	
+	
+</mapper>

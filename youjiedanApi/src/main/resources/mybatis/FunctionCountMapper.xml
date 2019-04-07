@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace:命名空间 -->
+<mapper namespace="com.stardai.manage.mapper.FunctionCountMapper">
+
+	<!-- 添加功能模块统计 -->
+	<insert id="addFunctionCount">
+		INSERT INTO yjd_function_statistics (
+		function_name,
+		create_date
+		)
+		VALUES
+		(
+		#{functionName},
+		now()
+		);
+	</insert>
+
+	<!-- 更新当天的点击量-->
+	<update id="updateFunctionCount">
+		UPDATE yjd_function_statistics
+		SET
+		function_count = function_count +1
+		WHERE
+		function_name = #{functionName}
+		and create_date = #{day}
+	</update>
+
+	<!-- 查看今天是否添加过 -->
+	<select id="queryIsClickToday" resultType="Integer">
+		SELECT
+		function_count
+		FROM
+		yjd_function_statistics
+		WHERE
+		function_name = #{functionName}
+		and create_date = #{day}
+		limit 1
+	</select>
+	
+	
+</mapper>

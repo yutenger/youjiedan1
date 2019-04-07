@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace:命名空间 -->
+<mapper namespace="com.stardai.manage.mapper.FeedBackToChannelsMapper">
+
+    <!-- 查询要不要返回 -->
+    <select id="queryToggleSwitch" resultType="String">
+        select
+        url
+        from
+        yjd_channel_fbswitch
+        WHERE
+        channel = #{channel} AND channel_branch = #{channelBranch} AND switch = 1
+        LIMIT 1
+    </select>
+
+    <!-- 查手机号 渠道和渠道细分-->
+    <select id="queryMobile" resultType="java.util.HashMap">
+        select
+        loan_phone,channel,channel_branch
+        from
+        yjd_loan_info
+        WHERE
+        order_no = #{orderNo}
+        LIMIT 1
+    </select>
+
+    <!-- 记录本次反馈 -->
+    <insert id="log">
+        INSERT INTO yjd_channel_fdresult
+        (mobile,buy_money,buy_time,message,channel,channel_branch,create_time,order_no,user_id)
+        VALUES
+        (#{mobile},#{buy_money},#{buy_time},#{message},#{channel},#{channelBranch},now(),#{orderNo},#{userId});
+    </insert>
+</mapper>

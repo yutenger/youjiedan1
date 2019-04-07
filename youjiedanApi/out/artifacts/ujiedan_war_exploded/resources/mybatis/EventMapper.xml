@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace:命名空间 -->
+<mapper namespace="com.stardai.manage.mapper.EventMapper">
+
+	<!-- 查询当前要弹窗的活动的id -->
+	<select id="queryEventsIndate" resultType="Integer">
+		select
+		event_id
+		from
+		yjd_event_switch
+		WHERE
+		event_switch = 1
+		AND
+		#{currentTime} BETWEEN begin_time AND end_time
+	</select>
+
+	<!-- 查要弹窗的活动的url等 -->
+	<select id="queryUrlAndPriority" resultType="java.util.HashMap">
+		select
+		url,pop_url as popUrl,priority
+		from
+		yjd_user_system_message
+		WHERE
+		id IN
+		<foreach collection="ids" item="id" separator="," open="("
+			close=")">
+			#{id}
+		</foreach>
+		ORDER BY priority
+	</select>
+
+	<!-- 根据用户的userId查询他邀请的好友消费星币时一共返利给他多少 -->
+	<select id="queryRebate" resultType="Integer">
+		SELECT
+		event_rebate
+		FROM
+		yjd_event_rebate
+		WHERE
+		shared_id = #{userId}
+	</select>
+
+	<!-- 新增一条返利数据 -->
+	<insert id="addEventRebate">
+		INSERT INTO yjd_event_rebate
+		(shared_id,event_rebate,create_time)
+		VALUES
+		(#{sharedId},0,now());
+	</insert>
+
+
+
+
+	<!-- 查询当前要弹窗的活动的id（安卓端） -->
+	<select id="queryPopUpIndateForAndroid" resultType="com.stardai.manage.response.ResponsePopupInfo">
+		select
+		priority,event_id
+		from
+		yjd_popup_setting
+		WHERE
+		event_switch = 1
+		AND
+		#{currentTime} BETWEEN begin_time AND end_time
+		AND
+		version_code = #{versionCode}
+
+	</select>
+
+	<!-- 查询安卓版本的信息 -->
+	<select id="getAndroidVersionInfo" resultType="com.stardai.manage.response.ResponsePopupInfo">
+		select
+		uuid,
+		os_type,
+		id,
+		page,
+		rows,
+		is_force_update,
+		pre_baseline_code,
+		version_name,
+		version_code,
+		downurl,
+		update_log,
+		size,
+		has_affect_codes,
+		create_time,
+		is_deleted
+		from
+		yjd_sys_version_check_new
+		WHERE
+		is_deleted = 0
+		and
+		os_type = "android"
+
+	</select>
+
+	<!-- 查询当前要弹窗的活动的id（iOS） -->
+	<select id="queryPopUpIndateForiOS" resultType="com.stardai.manage.response.ResponsePopupInfo">
+		select
+		priority,event_id
+		from
+		yjd_popup_setting
+		WHERE
+		event_switch = 1
+		AND
+		#{currentTime} BETWEEN begin_time AND end_time
+		AND
+		version_id = #{versionId}
+
+	</select>
+
+	<!-- 查询iOS版本的信息 -->
+	<select id="getiOSVersionInfo" resultType="com.stardai.manage.response.ResponsePopupInfo">
+		select
+		ios_version,
+		verify_status,
+		is_deleted
+		from
+		yjd_sys_version_check_new
+		WHERE
+		is_deleted = 0
+		and
+		os_type = "ios"
+		ORDER BY ios_version desc limit 1
+
+	</select>
+
+
+	<!-- 根据eventId查询活动的具体信息 -->
+	<select id="queryEventInfo" resultType="com.stardai.manage.response.ResponsePopupInfo">
+		select
+		url,pop_url
+		from
+		yjd_user_system_message
+		WHERE
+		id = #{eventId}
+
+	</select>
+
+	<!--当要弹屏的活动是邀请时，去系统公告里查priority=123的数据 -->
+	<select id="queryInventEventInfo" resultType="com.stardai.manage.response.ResponsePopupInfo">
+		select
+		url,pop_url
+		from
+		yjd_user_system_message
+		WHERE
+		priority = 123
+
+	</select>
+
+	<!-- 查询7天内此号码是否提交过企业合作 -->
+	<select id="queryIsCooperation" resultType="String">
+		select
+		mobile_number
+		from
+		yjd_company_cooperation
+		WHERE
+		mobile_number = #{mobileNumber}
+		and is_deleted = 0
+		and timestampadd(day, 7, create_time) > now()
+
+	</select>
+
+	<!-- 插入一条新的企业合作信息 -->
+	<insert id="addCompanyCooperation">
+		INSERT INTO yjd_company_cooperation (
+		name,
+		mobile_number,
+		company,
+		area,
+		require_num,
+		create_time
+		)
+		VALUES
+		(
+		#{name},
+		#{mobileNumber},
+		#{company},
+		#{area},
+		#{requireNum},
+		now()
+		);
+	</insert>
+
+	<!-- 根据版本code获取ios版本 -->
+	<select id="getIosVersionByVersionCode" resultType="String">
+		select
+		version_name
+		from
+		yjd_sys_version_check_new
+		WHERE
+		version_code =
+		#{versionCode}
+
+	</select>
+
+	<!-- 根据ios版本获取安卓对应的的版本号 -->
+	<select id="getVersionCodeByIosVersion" resultType="String">
+		select
+		version_code
+		from
+		yjd_sys_version_check_new
+		WHERE
+		version_name = #{iosVersion}
+
+	</select>
+
+	<!-- 查询发现页面的轮播图列表 -->
+	<select id="queryCarouselList" resultType="hashmap">
+		select
+		picture_url as pictureUrl,
+		click_url as clickUrl
+		from
+		yjd_discovery_carousel
+		WHERE
+		is_deleted = 0
+		order by id
+	</select>
+
+</mapper>

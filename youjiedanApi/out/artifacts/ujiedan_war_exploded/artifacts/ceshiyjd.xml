@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="ceshiyjd">
+    <output-path>$PROJECT_DIR$/out/artifacts/ceshiyjd</output-path>
+    <root id="archive" name="ceshiyjd.war">
+      <element id="artifact" artifact-name="ujiedan:war exploded" />
+      <element id="module-output" name="ujiedan" />
+    </root>
+  </artifact>
+</component>

@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace:命名空间 -->
+<mapper namespace="com.stardai.manage.mapper.ShareMapper">
+
+	<!--查询邀请的链接和分享的二维码图片链接-->
+	<select id="querySharePerson" resultType="com.stardai.manage.response.ResponseShareUser">
+		SELECT
+		share_url,
+		two_dimension_url
+		FROM
+		yjd_share_user
+		WHERE
+		user_id = #{userId}
+	</select>
+
+	<!--查询当月邀请获得的金额与邀请的人数-->
+	<select id="queryShareCountAndMoney" resultType="com.stardai.manage.response.ResponseShareUser">
+		SELECT
+		count(*) as shareCount,
+		IFNULL(sum(share_money),0) as shareMoney
+		FROM
+		yjd_share_detail
+		WHERE
+		share_id = #{userId}
+		and reg_time >= DATE_FORMAT(DATE_ADD(curdate(),interval -day(curdate())+1 day), '%Y-%m-%d %H:%i:%s')
+		and reg_time &lt; DATE_FORMAT(DATE_ADD(curdate()-day(curdate())+1,interval 1 month), '%Y-%m-%d %H:%i:%s')
+	</select>
+
+	<!-- 没有数据添加一条-->
+	<insert id="addSharePerson">
+		INSERT INTO yjd_share_user (
+		user_id,
+		share_url,
+		two_dimension_url
+		)
+		VALUES
+		(
+		#{userId},
+		#{shareUrl},
+		#{twoDimensionUrl}
+		);
+	</insert>
+	
+	<!--查询分享链接-->
+	<select id="queryShareUrl" resultType="String">
+		SELECT
+		url
+		FROM
+		yjd_share_url
+		WHERE
+		id=#{id}
+	</select>
+	
+	<!--将推荐人的表中的次数+1和赠送金额增加 -->
+	<update id="updateShareUserMoney">
+		UPDATE yjd_share_user
+		SET 
+		 share_count = (share_count + 1),
+		 share_money = (share_money + share_give)
+		WHERE
+		 user_id =#{userId}
+	</update>
+
+	<!--查询分享链接和文案(1.2.0版本以后使用)-->
+	<select id="queryShareUrlAndCopy" resultType="com.stardai.manage.response.ResponseShareUrl">
+		SELECT
+		url,
+		title,
+		subtitle
+		FROM
+		yjd_share_url
+		WHERE
+		id =#{id}
+	</select>
+	
+	
+	<!--把二维码链接更新到数据库里-->
+	<update id="updateTwoDimensionUrl">
+		UPDATE yjd_share_user
+		SET 
+		 two_dimension_url = #{twoDimensionUrl}
+		WHERE
+		 user_id =#{userId}
+	</update>
+
+
+	<!--查询用户邀请的明细-->
+	<select id="queryShareDetailList" resultType="com.stardai.manage.response.ResponseShareDetail">
+		SELECT
+		user_id,
+		mobile_number,
+		create_time,
+		approve_company as approveStatus
+		FROM
+		yjd_user_info
+		WHERE
+		shared_id = #{userId}
+		and create_time >= DATE_FORMAT(DATE_ADD(curdate(),interval -day(curdate())+1 day), '%Y-%m-%d %H:%i:%s')
+		and create_time &lt; DATE_FORMAT(DATE_ADD(curdate()-day(curdate())+1,interval 1 month), '%Y-%m-%d %H:%i:%s')
+		<if test="type == 1">
+			AND approve_company = 1
+		</if>
+		<if test="type == 2">
+			AND approve_company != 1
+		</if>
+		order by create_time desc
+		 LIMIT #{page},
+        #{pageSize}
+
+	</select>
+
+	<!--查询用户邀请这个人获取的星币-->
+	<select id="getShareMoneyByUserId" resultType="int">
+		SELECT
+		share_money
+		FROM
+		yjd_share_detail
+		WHERE
+		share_id = #{shareId}
+		and user_id = #{userId}
+	</select>
+
+</mapper>
